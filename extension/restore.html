@@ -6,10 +6,27 @@
   <link rel="stylesheet" href="restore.css"><script src="restore.js" defer></script>
 </head>
 <body><main>
-  <header><p class="brand">MINDTRAIL / RESEARCH SOURCES</p><h1 id="name">Restore your research</h1>
-    <p>Choose up to 10 sources to open in a new window. Each batch needs a click—nothing else opens automatically. Close tabs you no longer need before opening another batch.</p>
-    <p>Revisits stay in your timeline. Here, repeated sources are grouped, ignoring common tracking parameters.</p></header>
-  <p id="error" role="alert" hidden></p><p id="status" role="status">Loading sources…</p>
-  <div class="toolbar"><button id="open" disabled>Open selected sources</button><button id="next" class="secondary" disabled>Select next 10</button><button id="clear" class="secondary" disabled>Clear selection</button></div>
+  <a class="back-link" href="dashboard.html">← Back to your notebooks</a>
+  <header>
+    <div class="header-copy"><p class="brand">MINDTRAIL / REOPEN YOUR RESEARCH</p><h1 id="name">Restore your research</h1><p class="subtitle">Pick up where your curiosity left off.</p></div>
+    <svg class="page-doodle" viewBox="0 0 150 112" fill="none" aria-hidden="true">
+      <g transform="rotate(-9 57 57)"><rect x="24" y="17" width="70" height="83" rx="4" fill="#f2d283" stroke="#806145" stroke-width="1.7"/><rect x="16" y="9" width="70" height="83" rx="4" fill="#fffcf0" stroke="#806145" stroke-width="1.7"/><path d="M31 28h39 M31 40h32 M31 52h35 M31 64h25" stroke="#c0a17a" stroke-width="2" stroke-linecap="round"/></g>
+      <path d="M87 52c31-2 40 12 34 34 M111 80l10 7 10-7" stroke="#b5523c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="m117 11 2 7 7 2-7 2-2 7-2-7-7-2 7-2Z" fill="#b5523c"/>
+      <circle cx="101" cy="96" r="3" fill="#c0a17a"/>
+    </svg>
+  </header>
+  <aside class="instructions">
+    <span class="instruction-label">ONE BATCH AT A TIME</span>
+    <p>Choose up to <strong>10 sources</strong> to open in a new window. Each batch needs a click—nothing else opens automatically. Close tabs you no longer need before opening another batch.</p>
+    <p class="grouping-note">Revisits stay in your timeline. Here, repeated sources are grouped, ignoring common tracking parameters.</p>
+  </aside>
+  <p id="error" role="alert" hidden></p>
+  <div class="toolbar">
+    <p id="status" role="status">Loading sources…</p>
+    <div class="actions"><button id="open" disabled>Open selected sources</button><button id="next" class="secondary" disabled>Select next 10</button><button id="clear" class="secondary" disabled>Clear selection</button></div>
+  </div>
+  <div class="list-heading"><h2>Your source checklist</h2><span>Select. Reopen. Keep exploring.</span></div>
   <form id="sources" aria-label="Research sources"></form>
+  <footer>Good research is always worth revisiting. <span>MindTrail*</span></footer>
 </main></body></html>

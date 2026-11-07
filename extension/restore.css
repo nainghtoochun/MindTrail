@@ -1,19 +1,47 @@
-:root { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #193e36; background: #f7f8f2; }
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #49382c; background: #f8f1e3; }
 * { box-sizing: border-box; }
-body { margin: 0; }
-main { max-width: 900px; padding: 40px 24px; margin: auto; }
-h1 { font-size: 32px; overflow-wrap: anywhere; }
-p { line-height: 1.6; }
-.brand { color: #356859; letter-spacing: 2px; font-size: 12px; font-weight: 700; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; padding: 16px 0; background: #f7f8f2; }
-button { font: inherit; font-size: 14px; cursor: pointer; border: 1px solid #244d40; background: #244d40; color: white; padding: 12px 16px; border-radius: 9px; }
-button.secondary { background: white; color: #244d40; border-color: #d5dfca; }
-button:disabled { opacity: .5; cursor: default; }
-button:focus-visible, input:focus-visible { outline: 3px solid #94b368; outline-offset: 3px; }
-.source { display: flex; gap: 15px; padding: 20px; margin: 12px 0; border: 1px solid #d9dfd0; border-radius: 12px; background: white; }
-.source input { width: 20px; height: 20px; flex-shrink: 0; accent-color: #356859; }
-.source div { min-width: 0; }
-.source label { font-weight: 650; cursor: pointer; overflow-wrap: anywhere; }
-.source small, .source a { display: block; margin-top: 7px; overflow-wrap: anywhere; font-size: 12px; color: #5b7266; }
-#error { background: #fff0f0; color: #9e3341; border-radius: 8px; padding: 12px; }
+body { margin: 0; background-image: radial-gradient(#a98b5c16 .7px, transparent .7px); background-size: 7px 7px; }
+main { max-width: 1000px; padding: 32px 28px 45px; margin: auto; }
+a { color: #a34b36; text-underline-offset: 3px; }
+a:hover { color: #743321; }
+.back-link { font-size: 12px; text-decoration: none; border-bottom: 1px solid #b98c69; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 25px; margin: 28px 0 25px; }
+.header-copy { min-width: 0; }
+.brand { color: #a65338; letter-spacing: 1px; font: 700 10px 'Courier New', monospace; margin: 0 0 12px; }
+h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 38px; line-height: 1.2; letter-spacing: -1px; overflow-wrap: anywhere; margin: 0; }
+h2 { font-family: Georgia, 'Times New Roman', serif; font-size: 23px; font-weight: 700; letter-spacing: -.4px; margin: 0; }
+p { line-height: 1.7; }
+.subtitle { font-size: 14px; color: #806c5d; margin: 12px 0 0; }
+.page-doodle { width: 135px; height: 105px; flex-shrink: 0; transform: rotate(3deg); }
+.instructions { position: relative; background: #fff6dc; padding: 19px 22px; border: 1px solid #d3b57e; border-radius: 4px 8px 5px 4px; box-shadow: 3px 3px 0 #d9c6a344; margin-bottom: 25px; }
+.instructions::before { content: ''; position: absolute; top: -8px; right: 32px; width: 65px; height: 17px; transform: rotate(4deg); background: #d2b98c77; }
+.instruction-label { color: #a65338; font: 700 10px 'Courier New', monospace; letter-spacing: .8px; }
+.instructions p { font-size: 13px; color: #806145; margin: 9px 0 0; max-width: 95ch; }
+.instructions strong { color: #68462d; }
+.instructions .grouping-note { font-size: 11px; color: #8a725c; border-top: 1px dashed #ddc59d; padding-top: 10px; margin-top: 12px; }
+.toolbar { display: flex; flex-direction: column; gap: 10px; position: sticky; top: 0; z-index: 2; padding: 14px 17px 17px; margin-bottom: 29px; background: #fffbf1; border: 1px solid #c6ad8b; border-top: 4px solid #b5523c; border-radius: 4px; box-shadow: 3px 4px 0 #d9c6a355; }
+#status { margin: 0; font: 700 11px/1.7 'Courier New', monospace; color: #806145; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+button { font: inherit; font-size: 12px; font-weight: 550; cursor: pointer; border: 1.5px solid #653b2b; background: #b5523c; color: #fff9ee; padding: 10px 14px; border-radius: 5px; box-shadow: 2px 3px 0 #653b2b; }
+button:hover:enabled { background: #9f432f; }
+button.secondary { background: #fff9e9; color: #806145; border-color: #b99e7f; box-shadow: 2px 2px 0 #d8c3a4; }
+button.secondary:hover:enabled { background: #f6e4be; }
+button:disabled { opacity: .5; cursor: default; box-shadow: none; }
+button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #c27e42; outline-offset: 3px; }
+.list-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin-bottom: 17px; }
+.list-heading span { color: #8a725c; font: italic 13px Georgia, serif; }
+.source { display: flex; align-items: flex-start; gap: 13px; padding: 19px 21px; margin: 12px 0; border: 1px solid #d8c4a8; border-radius: 4px 7px 5px 4px; background: #fffcf5; box-shadow: 2px 3px 0 #d9c6a333; }
+.source:has(input:checked) { background: #fff6da; border-color: #c4a270; box-shadow: 3px 3px 0 #dbc38e55; }
+.source input { width: 19px; height: 19px; margin: 2px 0 0; flex-shrink: 0; accent-color: #b5523c; cursor: pointer; }
+.source input:disabled { cursor: default; }
+.source div { flex: 1; min-width: 0; }
+.source label { display: block; font-weight: 600; font-size: 14px; line-height: 1.5; cursor: pointer; overflow-wrap: anywhere; }
+.source a { display: block; margin-top: 6px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 12px; color: #9a6547; width: fit-content; max-width: 100%; }
+.source a:hover { color: #743321; }
+.source small { display: inline-block; margin-top: 10px; font-size: 10px; color: #8a725c; padding: 3px 7px; background: #efe2c966; border-radius: 3px; }
+#error { background: #fce8df; color: #a44232; border: 1px solid #d7a18b; border-radius: 5px; padding: 13px 16px; font-size: 13px; overflow-wrap: anywhere; }
+footer { display: flex; justify-content: space-between; gap: 15px; margin-top: 30px; border-top: 1px dashed #cbb392; padding-top: 18px; color: #8a725c; font-size: 11px; }
+footer span { font-family: Georgia, serif; font-weight: 700; color: #735238; }
 [hidden] { display: none !important; }
+@media(max-width:600px) { main { padding: 23px 16px 32px; } header { gap: 12px; margin-top: 25px; } h1 { font-size: 28px; } .brand { font-size: 8px; } .page-doodle { width: 75px; height: 75px; } .subtitle { font-size: 12px; } .instructions { padding: 16px; } .instructions p { font-size: 12px; } .toolbar { padding: 12px; margin-bottom: 22px; } .actions { gap: 8px; } .actions button { padding: 9px 10px; font-size: 11px; } #open { flex-basis: 100%; } .secondary { flex: 1; } .list-heading span { display: none; } h2 { font-size: 21px; } .source { padding: 15px; gap: 10px; } .source label { font-size: 13px; } .source a { font-size: 11px; } footer { font-size: 10px; } }
+@media(prefers-reduced-motion:no-preference) { button { transition: background .15s ease; } }
