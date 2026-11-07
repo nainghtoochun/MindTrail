@@ -243,3 +243,5 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #c27
 /* Allow the research-brief entry point alongside session actions. */
 .title-row { flex-wrap: wrap; }
 .actions { flex-wrap: wrap; max-width: 100%; }
+
+.brand-logo{display:block;flex-shrink:0;width:40px;height:40px;object-fit:contain}
