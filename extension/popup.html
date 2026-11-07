@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MindTrail</title>
+  <link rel="stylesheet" href="popup.css">
+  <script src="popup.js" defer></script>
+</head>
+<body>
+  <main id="app" aria-busy="true">
+    <header>
+      <span class="brand-mark" aria-hidden="true">M<span>↗</span></span>
+      <div><h1>MindTrail</h1><p>Your research companion</p></div>
+    </header>
+    <p id="loading" role="status">Loading your research…</p>
+    <p id="error" class="error" role="alert" hidden></p>
+    <button id="retry" class="secondary" hidden>Try again</button>
+    <section id="idle" hidden>
+      <div class="eyebrow">FOLLOW YOUR CURIOSITY</div>
+      <h2>A little wandering.<br>A trail worth keeping.</h2>
+      <p class="description">Keep your pages and highlights together as your ideas take shape.</p>
+      <form id="start-form">
+        <label for="session-name">What are you researching?</label>
+        <input id="session-name" name="session-name" maxlength="120" placeholder="e.g. Learning Machine Learning" required autocomplete="off">
+        <button id="start" type="submit" class="primary">Start Research <span aria-hidden="true">↗</span></button>
+      </form>
+    </section>
+    <section id="recording" hidden>
+      <div class="recording-label"><span class="dot" aria-hidden="true"></span> Recording research</div>
+      <h2 id="current-name"></h2>
+      <div class="stats">
+        <div><strong id="page-count">0</strong><span>Pages visited</span></div>
+        <div><strong id="highlight-count">0</strong><span>Highlights saved</span></div>
+      </div>
+      <p class="description">Select text on a page, then right-click <b>Save to MindTrail</b> to keep a highlight.</p>
+      <button id="stop" class="primary stop">Stop Research <span aria-hidden="true">■</span></button>
+    </section>
+    <footer><button id="dashboard" class="secondary">Open Dashboard <span aria-hidden="true">→</span></button><p>Your curiosity, connected.</p></footer>
+  </main>
+</body>
+</html>
