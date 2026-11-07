@@ -81,8 +81,8 @@ async function feedback(message, failed = false) {
 const TIMER = 'mindtrail-session-deadline';
 const MINUTE = 60000;
 function duration(value = 120) {
-  if (!Number.isInteger(value) || value < 15 || value > 480) {
-    throw new Error('Choose a recording limit between 15 and 480 minutes.');
+  if (!Number.isInteger(value) || value < 6 || value > 480) {
+    throw new Error('Choose a recording limit between 6 and 480 minutes.');
   }
   return value;
 }
