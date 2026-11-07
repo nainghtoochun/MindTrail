@@ -113,7 +113,7 @@ async function saveDraft() {
   saving = true; controls();
   try {
     const { brief } = await message('SAVE_RESEARCH_BRIEF', draft);
-    session.researchBrief = brief; draft = null; renderReport(brief);
+    session.researchBrief = brief; draft = null; $('error').hidden = true; renderReport(brief);
   } finally { saving = false; controls(); }
 }
 $('brief-form').addEventListener('submit', async event => {

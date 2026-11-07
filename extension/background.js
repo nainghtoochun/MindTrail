@@ -73,29 +73,57 @@ async function feedback(message, failed = false) {
   const timedOut = !recording && state?.sessions.at(-1)?.endReason === 'time_limit';
   await Promise.all([
     chrome.action.setBadgeText({ text: recording ? 'REC' : timedOut ? 'STOP' : failed ? '!' : '' }),
-    chrome.action.setBadgeBackgroundColor({ color: failed || timedOut ? '#b93848' : '#356859' }),
+    chrome.action.setBadgeBackgroundColor({ color: failed || timedOut ? '#a44232' : '#b5523c' }),
     chrome.action.setTitle({ title: `MindTrail — ${recording ? 'Recording · ' : ''}${message}` })
   ]);
 }
 
 const TIMER = 'mindtrail-session-deadline';
+const WARNING_TIMER = 'mindtrail-session-warning';
+const STOP_TIMER = 'mindtrail-session-stop';
 const MINUTE = 60000;
 function duration(value = 120) {
-  if (!Number.isInteger(value) || value < 15 || value > 480) {
-    throw new Error('Choose a recording limit between 15 and 480 minutes.');
+  if (!Number.isInteger(value) || value < 6 || value > 480) {
+    throw new Error('Choose a recording limit between 6 and 480 minutes.');
   }
   return value;
 }
+// One visible alert window, reused across warning/end events and worker restarts.
+// This extension window does not depend on macOS notification settings.
+async function openTimerAlert(session, kind) {
+  const key = 'mindtrailTimerAlertWindow';
+  const base = chrome.runtime.getURL('timer-alert.html');
+  const url = `${base}?sessionId=${encodeURIComponent(session.id)}&kind=${kind}`;
+  const stored = await chrome.storage.session.get(key);
+  if (Number.isInteger(stored[key])) {
+    try {
+      const previous = await chrome.windows.get(stored[key], { populate: true });
+      const tab = previous.tabs?.[0];
+      if (previous.type === 'popup' && previous.tabs.length === 1 && tab?.url?.split('?')[0] === base) {
+        await chrome.tabs.update(tab.id, { url });
+        await chrome.windows.update(previous.id, { focused: true });
+        return;
+      }
+    } catch { /* The previous alert was closed. Create a new one. */ }
+  }
+  const alert = await chrome.windows.create({ url, type: 'popup', width: 440, height: 540, focused: true });
+  await chrome.storage.session.set({ [key]: alert.id });
+}
+
 async function notifySession(session, kind, message) {
   try {
     await chrome.notifications.create(`mindtrail-${kind}-${session.id}`, {
       type: 'basic', iconUrl: chrome.runtime.getURL('notification-icon.png'),
-      title: `MindTrail · ${session.name}`, message, requireInteraction: true
+      title: `${kind === 'warning' ? 'Less than 5 minutes left' : kind === 'stopped' ? 'Research session ended' : 'MindTrail'} · ${session.name}`, message, requireInteraction: true
     });
   } catch (error) {
     // OS notifications can be blocked. The persistent popup notice and badge
     // remain available; notification failure must never prevent saving a stop.
     console.warn('MindTrail notification unavailable:', error.message);
+  }
+  if (kind === 'warning' || kind === 'stopped') {
+    try { await openTimerAlert(session, kind); }
+    catch (error) { console.warn('MindTrail alert window unavailable:', error.message); }
   }
 }
 function finishSession(state, session, reason, timestamp = new Date().toISOString()) {
@@ -119,19 +147,37 @@ async function enforceDeadline(state) {
   if (remaining <= 0) {
     finishSession(state, session, 'time_limit', session.stopAt);
     await saveState(state);
-    await chrome.alarms.clear(TIMER);
+    await clearTimers();
     await feedback('Time limit reached. Recording stopped; all research is saved.').catch(() => {});
-    await notifySession(session, 'stopped', 'Your time limit was reached. Recording stopped and your research is saved. Open MindTrail to start a new session.');
-  } else if (remaining <= 5 * MINUTE && !session.limitWarningAt) {
+    await clearWarning(session);
+    await notifySession(session, 'stopped', 'Your research session has ended. All your pages, highlights and explanations are saved. Open MindTrail to review your research or start a new session.');
+  } else if (remaining < 5 * MINUTE && !session.limitWarningAt) {
     session.limitWarningAt = new Date().toISOString();
     await saveState(state);
-    await notifySession(session, 'warning', 'Recording stops in 5 minutes or less. Open MindTrail and choose “Add 1 hour” to keep recording.');
+    await notifySession(session, 'warning', 'Less than 5 minutes remain in this research session. Open MindTrail and choose “Add 1 hour” to keep recording.');
   }
 }
+async function clearWarning(session) {
+  try { await chrome.notifications.clear(`mindtrail-warning-${session.id}`); }
+  catch { /* Notification permission may be unavailable. */ }
+}
+async function clearTimers() {
+  await Promise.all([TIMER, WARNING_TIMER, STOP_TIMER].map(name => chrome.alarms.clear(name)));
+}
+async function scheduleAt(name, when) {
+  const existing = await chrome.alarms.get(name);
+  if (!existing || existing.scheduledTime !== when) await chrome.alarms.create(name, { when });
+}
 async function ensureTimer(state) {
-  if (activeSession(state)) {
-    if (!await chrome.alarms.get(TIMER)) await chrome.alarms.create(TIMER, { periodInMinutes: 1 });
-  } else await chrome.alarms.clear(TIMER);
+  const session = activeSession(state);
+  if (!session) { await clearTimers(); return; }
+  // Keep the original periodic reconciliation as a fallback for delayed alarms.
+  if (!await chrome.alarms.get(TIMER)) await chrome.alarms.create(TIMER, { periodInMinutes: 1 });
+  const deadline = Date.parse(session.stopAt);
+  await scheduleAt(STOP_TIMER, deadline);
+  if (!session.limitWarningAt) {
+    await scheduleAt(WARNING_TIMER, Math.max(Date.now() + 1000, deadline - 5 * MINUTE + 1000));
+  } else await chrome.alarms.clear(WARNING_TIMER);
 }
 
 // Remove only well-known tracking parameters. Keep fragments and application
@@ -196,6 +242,7 @@ async function handleMessage(message) {
       const session = activeSession(state);
       if (!session) throw new Error('There is no active research session.');
       finishSession(state, session, 'manual');
+      await clearWarning(session);
       await saveState(state);
       await ensureTimer(state);
       await feedback('Research saved').catch(() => {});
@@ -230,6 +277,7 @@ async function handleMessage(message) {
       if (!session || session.id !== message.sessionId) throw new Error('This recording has ended. Start a new session.');
       session.stopAt = new Date(Date.parse(session.stopAt) + 60 * MINUTE).toISOString();
       session.limitWarningAt = null;
+      await clearWarning(session);
       await saveState(state);
       await ensureTimer(state);
       await feedback('Recording extended by 1 hour').catch(() => {});
@@ -359,7 +407,7 @@ function initializeRecording() {
   });
 }
 chrome.alarms.onAlarm.addListener(alarm => {
-  if (alarm.name === TIMER) void initializeRecording().catch(report);
+  if ([TIMER, WARNING_TIMER, STOP_TIMER].includes(alarm.name)) void initializeRecording().catch(report);
 });
 chrome.runtime.onStartup.addListener(() => { void initializeRecording().catch(report); });
 chrome.notifications.onClicked.addListener(id => {
