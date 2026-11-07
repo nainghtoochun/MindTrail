@@ -239,3 +239,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline-color: #c27
 @media (max-height: 760px) and (min-width: 721px) { .sidebar-footer { margin-bottom: 15px; padding: 16px; } .sidebar-footer strong { font-size: 18px; } .sidebar-footer p { display: none; } }
 @media (max-width: 1050px) { .stat { padding: 17px 12px; } .stats { gap: 12px; } }
 @media (max-width: 720px) { .sidebar { border-right: 0; border-bottom: 2px solid #49382c; } .sidebar-footer { display: none; } h1 { font-size: 32px; } .stat { padding: 14px 10px; } .stat strong { font-size: 25px; } .stats { gap: 10px; } .quote { font-size: 18px; background: none; } .event-card { padding: 17px 14px; } .explanation { padding: 16px; } .ai-badge { font-size: 10px; } }
+
+/* Allow the research-brief entry point alongside session actions. */
+.title-row { flex-wrap: wrap; }
+.actions { flex-wrap: wrap; max-width: 100%; }

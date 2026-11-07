@@ -137,7 +137,12 @@ function render() {
   restore.prepend(icon('external'));
   const remove = button('Delete session', 'button secondary danger', () => deleteSession(session)); remove.prepend(icon('delete'));
   restore.disabled = busyActions.has(session.id) || !uniqueUrls(session).length; remove.disabled = busyActions.has(session.id);
-  actions.append(restore, remove); titleRow.append(actions); content.append(titleRow);
+  const brief = button('Research brief', 'button secondary', () => {
+    if (preview) { toast('Research briefs use your saved highlights. Open the installed extension to create one.'); return; }
+    window.open(chrome.runtime.getURL(`research-brief.html?sessionId=${encodeURIComponent(session.id)}`), '_blank', 'noopener');
+  });
+  brief.prepend(icon('page'));
+  actions.append(brief, restore, remove); titleRow.append(actions); content.append(titleRow);
   const subtitle = el('div', 'subtitle');
   subtitle.append(el('span', '', date(session.startedAt, { month: 'long', day: 'numeric', year: 'numeric' })), el('span', '', `${duration(session)} of exploration`));
   if (state.activeSessionId === session.id) { const active = el('span', 'recording'); active.append(el('span', 'dot'), document.createTextNode('Recording')); subtitle.append(active); }

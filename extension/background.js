@@ -1,10 +1,12 @@
+import { validateBriefInput, validateBriefResult, verifyBriefSnapshot } from './brief-contract.mjs';
+
 'use strict';
 
 const STATE_KEY = 'mindtrailState';
 const MENU_ID = 'mindtrail-save';
 const ACTIONS = new Set([
   'START_SESSION', 'STOP_SESSION', 'GET_STATE', 'UPDATE_EXPLANATION',
-  'RESTORE_SESSION', 'DELETE_SESSION', 'GET_RESTORE_SOURCES', 'RESTORE_BATCH', 'EXTEND_SESSION'
+  'SAVE_RESEARCH_BRIEF', 'RESTORE_SESSION', 'DELETE_SESSION', 'GET_RESTORE_SOURCES', 'RESTORE_BATCH', 'EXTEND_SESSION'
 ]);
 
 // Every read/modify/write and recording callback joins this queue. State itself
@@ -198,6 +200,15 @@ async function handleMessage(message) {
       await ensureTimer(state);
       await feedback('Research saved').catch(() => {});
       return { success: true };
+    }
+    case 'SAVE_RESEARCH_BRIEF': {
+      const session = findSession(state, message.sessionId);
+      const input = validateBriefInput(message.input);
+      verifyBriefSnapshot(input, session);
+      const result = validateBriefResult(message.result, input);
+      session.researchBrief = { version: 1, generatedAt: new Date().toISOString(), input, result };
+      await saveState(state);
+      return { success: true, brief: session.researchBrief };
     }
     case 'UPDATE_EXPLANATION': {
       const session = findSession(state, message.sessionId);
