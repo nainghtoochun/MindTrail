@@ -88,6 +88,28 @@ function duration(value = 120) {
   }
   return value;
 }
+// One visible alert window, reused across warning/end events and worker restarts.
+// This extension window does not depend on macOS notification settings.
+async function openTimerAlert(session, kind) {
+  const key = 'mindtrailTimerAlertWindow';
+  const base = chrome.runtime.getURL('timer-alert.html');
+  const url = `${base}?sessionId=${encodeURIComponent(session.id)}&kind=${kind}`;
+  const stored = await chrome.storage.session.get(key);
+  if (Number.isInteger(stored[key])) {
+    try {
+      const previous = await chrome.windows.get(stored[key], { populate: true });
+      const tab = previous.tabs?.[0];
+      if (previous.type === 'popup' && previous.tabs.length === 1 && tab?.url?.split('?')[0] === base) {
+        await chrome.tabs.update(tab.id, { url });
+        await chrome.windows.update(previous.id, { focused: true });
+        return;
+      }
+    } catch { /* The previous alert was closed. Create a new one. */ }
+  }
+  const alert = await chrome.windows.create({ url, type: 'popup', width: 440, height: 540, focused: true });
+  await chrome.storage.session.set({ [key]: alert.id });
+}
+
 async function notifySession(session, kind, message) {
   try {
     await chrome.notifications.create(`mindtrail-${kind}-${session.id}`, {
@@ -98,6 +120,10 @@ async function notifySession(session, kind, message) {
     // OS notifications can be blocked. The persistent popup notice and badge
     // remain available; notification failure must never prevent saving a stop.
     console.warn('MindTrail notification unavailable:', error.message);
+  }
+  if (kind === 'warning' || kind === 'stopped') {
+    try { await openTimerAlert(session, kind); }
+    catch (error) { console.warn('MindTrail alert window unavailable:', error.message); }
   }
 }
 function finishSession(state, session, reason, timestamp = new Date().toISOString()) {

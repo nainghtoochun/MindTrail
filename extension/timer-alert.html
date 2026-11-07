@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MindTrail · Session alert</title><link rel="stylesheet" href="timer-alert.css"><script src="timer-alert.js" defer></script></head>
+<body><main>
+  <header><span class="brand">MindTrail<span>*</span></span><span class="eyebrow">A NOTE FROM YOUR TIMER</span></header>
+  <div class="alert-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 7h16 M24 7v6 M35 16l4-4 M37 28a13 13 0 1 1-26 0 13 13 0 0 1 26 0 M24 20v9l6 4"/></svg></div>
+  <section role="alert" aria-atomic="true"><h1 id="title">Checking your session…</h1><p id="session-name"></p><p id="message">Getting the latest recording status.</p></section>
+  <div id="countdown-panel" hidden><span>TIME REMAINING</span><strong id="countdown">--:--</strong></div>
+  <p id="error" role="alert" hidden></p>
+  <div class="actions"><button id="extend" hidden>+ Add 1 hour</button><button id="dashboard" class="secondary">Open dashboard</button><button id="dismiss" class="text-button">Dismiss</button></div>
+  <footer>Keep the good ideas. We’ll keep your notes.</footer>
+</main></body></html>
