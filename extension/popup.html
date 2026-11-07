@@ -1,42 +1,19 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MindTrail</title>
-  <link rel="stylesheet" href="popup.css">
-  <script src="popup.js" defer></script>
-</head>
-<body>
-  <main id="app" aria-busy="true">
-    <header>
-      <span class="brand-mark" aria-hidden="true">M<span>↗</span></span>
-      <div><h1>MindTrail</h1><p>Your research companion</p></div>
-    </header>
-    <p id="loading" role="status">Loading your research…</p>
-    <p id="error" class="error" role="alert" hidden></p>
-    <button id="retry" class="secondary" hidden>Try again</button>
-    <section id="idle" hidden>
-      <div class="eyebrow">FOLLOW YOUR CURIOSITY</div>
-      <h2>A little wandering.<br>A trail worth keeping.</h2>
-      <p class="description">Keep your pages and highlights together as your ideas take shape.</p>
-      <form id="start-form">
-        <label for="session-name">What are you researching?</label>
-        <input id="session-name" name="session-name" maxlength="120" placeholder="e.g. Learning Machine Learning" required autocomplete="off">
-        <button id="start" type="submit" class="primary">Start Research <span aria-hidden="true">↗</span></button>
-      </form>
-    </section>
-    <section id="recording" hidden>
-      <div class="recording-label"><span class="dot" aria-hidden="true"></span> Recording research</div>
-      <h2 id="current-name"></h2>
-      <div class="stats">
-        <div><strong id="page-count">0</strong><span>Pages visited</span></div>
-        <div><strong id="highlight-count">0</strong><span>Highlights saved</span></div>
-      </div>
-      <p class="description">Select text on a page, then right-click <b>Save to MindTrail</b> to keep a highlight.</p>
-      <button id="stop" class="primary stop">Stop Research <span aria-hidden="true">■</span></button>
-    </section>
-    <footer><button id="dashboard" class="secondary">Open Dashboard <span aria-hidden="true">→</span></button><p>Your curiosity, connected.</p></footer>
-  </main>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MindTrail</title><link rel="stylesheet" href="popup.css"><script src="popup.js" defer></script></head>
+<body><main id="app" aria-busy="true">
+<header><div class="brand"><span class="brand-mark"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17V7l7 7 7-7v10 M9 17l3-3 3 3"/></svg></span><span>MindTrail<span class="brand-dot">.</span></span></div><span class="header-tag">RESEARCH COMPANION</span></header>
+<p id="loading" role="status">Getting your workspace ready…</p><p id="error" class="error" role="alert" hidden></p><button id="retry" class="secondary" hidden>Try again</button>
+<section id="idle" hidden>
+  <div class="hero"><div class="eyebrow">FOLLOW YOUR CURIOSITY</div><h1>Go down the rabbit hole.<br><em>Keep the good parts.</em></h1><p>Turn open tabs into lasting knowledge.</p>
+  <svg class="trail-art" viewBox="0 0 320 58" fill="none" aria-hidden="true"><path d="M15 29h62c30 0 21-22 50-22h34c31 0 21 42 52 42h40c27 0 23-20 52-20" stroke="#a6c3a4" stroke-width="1.5" stroke-dasharray="4 5"/><circle cx="20" cy="29" r="14" fill="#e9eedc"/><path d="M16 23h8v12h-8z" stroke="#254d40" stroke-width="1.5"/><circle cx="151" cy="7" r="6" fill="#c8e79b"/><rect x="224" y="33" width="30" height="30" rx="9" transform="rotate(-10 224 33)" fill="#254d40"/><path d="m238 36 2 5 5 2-5 2-2 5-2-5-5-2 5-2Z" fill="#d7eead"/><circle cx="303" cy="29" r="5" fill="#a8bba6"/></svg></div>
+  <form id="start-form"><label for="session-name">What are you exploring?</label><input id="session-name" name="session-name" maxlength="120" placeholder="e.g. How neural networks learn" required autocomplete="off"><button id="start" type="submit" class="primary"><span>Start research</span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14 m-5-5 5 5-5 5"/></svg></button><p class="form-note"><span class="dot"></span> Tracking starts only when you do.</p></form>
+</section>
+<section id="recording" hidden>
+  <div class="recording-label"><span class="dot"></span> RECORDING IN PROGRESS</div><h1 id="current-name"></h1><p class="recording-subtitle">Follow the ideas. We’ll remember the way.</p>
+  <div class="stats"><div><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6z M14 3v5h4 M9 12h6 M9 16h6"/></svg><strong id="page-count">0</strong><span>Pages visited</span></div><div><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4Z"/></svg><strong id="highlight-count">0</strong><span>Highlights saved</span></div></div>
+  <div class="tip"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5Z"/></svg><p><strong>Found something worth keeping?</strong>Select text, then right-click <b>Save to MindTrail</b>. Explain it with Gemini in your dashboard.</p></div>
+  <button id="stop" class="primary stop"><span>Finish &amp; save session</span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h12v12H6z"/></svg></button>
+</section>
+<footer><button id="dashboard" class="secondary"><span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z"/></svg> Open dashboard</span><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14 m-5-5 5 5-5 5"/></svg></button><p><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6z m-4 9 3 3 5-6"/></svg> Your research stays on your device.</p></footer>
+</main></body></html>
