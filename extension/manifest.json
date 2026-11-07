@@ -1,10 +1,23 @@
 {
   "manifest_version": 3,
   "name": "MindTrail",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Record, save, and replay your browsing research.",
-  "permissions": ["tabs", "storage", "contextMenus"],
-  "host_permissions": ["http://localhost:3001/*"],
-  "background": { "service_worker": "background.js" },
-  "action": { "default_title": "MindTrail", "default_popup": "popup.html" }
+  "permissions": [
+    "tabs",
+    "storage",
+    "contextMenus",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "http://localhost:3001/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "MindTrail",
+    "default_popup": "popup.html"
+  }
 }
