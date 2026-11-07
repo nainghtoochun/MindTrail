@@ -14,6 +14,7 @@
       <div><h1>MindTrail</h1><p>Your research companion</p></div>
     </header>
     <p id="loading" role="status">Loading your research…</p>
+    <p id="notice" class="notice" role="status" hidden></p>
     <p id="error" class="error" role="alert" hidden></p>
     <button id="retry" class="secondary" hidden>Try again</button>
     <section id="idle" hidden>
@@ -23,12 +24,17 @@
       <form id="start-form">
         <label for="session-name">What are you researching?</label>
         <input id="session-name" name="session-name" maxlength="120" placeholder="e.g. Learning Machine Learning" required autocomplete="off">
+        <label for="duration">Recording time limit</label>
+        <select id="duration"><option value="30">30 minutes</option><option value="60">1 hour</option><option value="120" selected>2 hours</option><option value="240">4 hours</option><option value="480">8 hours</option></select>
+        <p class="description">We’ll warn you 5 minutes before stopping. You can extend the time while recording. No inactivity cutoff.</p>
         <button id="start" type="submit" class="primary">Start Research <span aria-hidden="true">↗</span></button>
       </form>
     </section>
     <section id="recording" hidden>
       <div class="recording-label"><span class="dot" aria-hidden="true"></span> Recording research</div>
       <h2 id="current-name"></h2>
+      <p id="stop-time" class="notice"></p>
+      <button id="extend" class="secondary">Add 1 hour</button>
       <div class="stats">
         <div><strong id="page-count">0</strong><span>Pages visited</span></div>
         <div><strong id="highlight-count">0</strong><span>Highlights saved</span></div>

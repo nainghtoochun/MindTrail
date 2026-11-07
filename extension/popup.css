@@ -31,3 +31,6 @@ footer p { color: #84907e; text-align: center; font-size: 10px; margin: 15px 0 0
 .error { font-size: 12px; line-height: 1.5; color: #9e3341; border: 1px solid #edcbd0; border-radius: 8px; padding: 10px; background: #fff3f3; }
 #loading { font-size: 12px; color: #68796e; }
 #retry { margin-bottom: 16px; }
+
+select { width: 100%; padding: 12px; font: inherit; font-size: 12px; background: white; color: #193e36; border: 1px solid #d9dfd0; border-radius: 9px; }
+.notice { background: #edf1de; border: 1px solid #d5dfba; border-radius: 9px; padding: 12px; font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }

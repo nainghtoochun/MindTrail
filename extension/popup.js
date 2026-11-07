@@ -3,6 +3,7 @@
 const $ = id => document.getElementById(id);
 let busy = false;
 let loaded = false;
+let currentSessionId = null;
 let refreshQueue = Promise.resolve();
 
 async function request(action, data = {}) {
@@ -14,7 +15,7 @@ async function request(action, data = {}) {
 function setBusy(value) {
   busy = value;
   $('app').setAttribute('aria-busy', String(value));
-  for (const id of ['start', 'stop', 'session-name', 'dashboard', 'retry']) $(id).disabled = value;
+  for (const id of ['start', 'stop', 'session-name', 'dashboard', 'retry', 'duration', 'extend']) $(id).disabled = value;
 }
 
 function showError(error) {
@@ -24,10 +25,16 @@ function showError(error) {
 
 function render(state) {
   const session = state.sessions.find(item => item.id === state.activeSessionId);
+  currentSessionId = session?.id || null;
+  const last = state.sessions.at(-1);
+  $('notice').hidden = Boolean(session) || last?.endReason !== 'time_limit';
+  $('notice').textContent = last?.endReason === 'time_limit' ? `Recording “${last.name}” stopped at its time limit. All your research is saved. Start a new session to continue.` : '';
   $('idle').hidden = Boolean(session);
   $('recording').hidden = !session;
   if (session) {
     $('current-name').textContent = session.name;
+    const stopTime = session.stopAt ? new Date(session.stopAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+    $('stop-time').textContent = stopTime ? `Recording will stop at ${stopTime}. ${Date.parse(session.stopAt) - Date.now() <= 300000 ? 'Less than 5 minutes left — extend now to keep recording.' : 'You can extend it below.'}` : 'Your recording time limit is being initialized.';
     $('page-count').textContent = session.events.filter(item => item.type === 'page_visit').length;
     $('highlight-count').textContent = session.events.filter(item => item.type === 'highlight').length;
   }
@@ -65,7 +72,7 @@ $('start-form').addEventListener('submit', event => {
     const name = $('session-name').value.trim();
     if (!name) throw new Error('Give your research session a name.');
     const window = await chrome.windows.getCurrent();
-    await request('START_SESSION', { name, windowId: window.id });
+    await request('START_SESSION', { name, windowId: window.id, durationMinutes: Number($('duration').value) });
     await refresh();
   });
 });
@@ -85,6 +92,11 @@ $('dashboard').addEventListener('click', () => {
     await chrome.tabs.create({ url });
   });
 });
+$('extend').addEventListener('click', () => {
+  void perform(async () => { await request('EXTEND_SESSION', { sessionId: currentSessionId }); await refresh(); });
+});
+// Keep deadline warnings current while the popup remains open.
+setInterval(() => { if (!busy) void refresh().catch(showError); }, 15000);
 $('retry').addEventListener('click', () => { void perform(refresh); });
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && changes.mindtrailState) {
