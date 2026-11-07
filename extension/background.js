@@ -4,7 +4,7 @@ const STATE_KEY = 'mindtrailState';
 const MENU_ID = 'mindtrail-save';
 const ACTIONS = new Set([
   'START_SESSION', 'STOP_SESSION', 'GET_STATE', 'UPDATE_EXPLANATION',
-  'RESTORE_SESSION', 'DELETE_SESSION'
+  'RESTORE_SESSION', 'DELETE_SESSION', 'GET_RESTORE_SOURCES', 'RESTORE_BATCH', 'EXTEND_SESSION'
 ]);
 
 // Every read/modify/write and recording callback joins this queue. State itself
@@ -22,6 +22,7 @@ async function readState() {
   if (!stored || !Array.isArray(stored.sessions)) {
     throw new Error('MindTrail storage is invalid. Existing data has been preserved.');
   }
+  await enforceDeadline(stored);
   return stored;
 }
 
@@ -63,17 +64,101 @@ function lastVisit(session, tabId) {
   return session.events.findLast(item => item.type === 'page_visit' && item.tabId === tabId);
 }
 
+// Keep recording/automatic-stop status visible even after saving a highlight.
 async function feedback(message, failed = false) {
+  const state = (await chrome.storage.local.get(STATE_KEY))[STATE_KEY];
+  const recording = Boolean(state?.activeSessionId);
+  const timedOut = !recording && state?.sessions.at(-1)?.endReason === 'time_limit';
   await Promise.all([
-    chrome.action.setBadgeText({ text: failed ? '!' : '' }),
-    chrome.action.setBadgeBackgroundColor({ color: failed ? '#b93848' : '#356859' }),
-    chrome.action.setTitle({ title: `MindTrail — ${message}` })
+    chrome.action.setBadgeText({ text: recording ? 'REC' : timedOut ? 'STOP' : failed ? '!' : '' }),
+    chrome.action.setBadgeBackgroundColor({ color: failed || timedOut ? '#b93848' : '#356859' }),
+    chrome.action.setTitle({ title: `MindTrail — ${recording ? 'Recording · ' : ''}${message}` })
   ]);
+}
+
+const TIMER = 'mindtrail-session-deadline';
+const MINUTE = 60000;
+function duration(value = 120) {
+  if (!Number.isInteger(value) || value < 15 || value > 480) {
+    throw new Error('Choose a recording limit between 15 and 480 minutes.');
+  }
+  return value;
+}
+async function notifySession(session, kind, message) {
+  try {
+    await chrome.notifications.create(`mindtrail-${kind}-${session.id}`, {
+      type: 'basic', iconUrl: chrome.runtime.getURL('notification-icon.png'),
+      title: `MindTrail · ${session.name}`, message, requireInteraction: true
+    });
+  } catch (error) {
+    // OS notifications can be blocked. The persistent popup notice and badge
+    // remain available; notification failure must never prevent saving a stop.
+    console.warn('MindTrail notification unavailable:', error.message);
+  }
+}
+function finishSession(state, session, reason, timestamp = new Date().toISOString()) {
+  session.events.push(event('session_ended', {}, { timestamp,
+    title: reason === 'time_limit' ? 'Recording stopped at the time limit — research saved' : 'Research saved' }));
+  session.endedAt = timestamp;
+  session.endReason = reason;
+  state.activeSessionId = null;
+}
+async function enforceDeadline(state) {
+  const session = activeSession(state);
+  if (!session) return;
+  if (!session.stopAt) {
+    // Existing recordings get a fresh, announced limit instead of expiring on upgrade.
+    session.durationMinutes = 120;
+    session.stopAt = new Date(Date.now() + 120 * MINUTE).toISOString();
+    await saveState(state);
+    await notifySession(session, 'limit', 'Recording now has a 2-hour limit. Open MindTrail to see or extend the stop time.');
+  }
+  const remaining = Date.parse(session.stopAt) - Date.now();
+  if (remaining <= 0) {
+    finishSession(state, session, 'time_limit', session.stopAt);
+    await saveState(state);
+    await chrome.alarms.clear(TIMER);
+    await feedback('Time limit reached. Recording stopped; all research is saved.').catch(() => {});
+    await notifySession(session, 'stopped', 'Your time limit was reached. Recording stopped and your research is saved. Open MindTrail to start a new session.');
+  } else if (remaining <= 5 * MINUTE && !session.limitWarningAt) {
+    session.limitWarningAt = new Date().toISOString();
+    await saveState(state);
+    await notifySession(session, 'warning', 'Recording stops in 5 minutes or less. Open MindTrail and choose “Add 1 hour” to keep recording.');
+  }
+}
+async function ensureTimer(state) {
+  if (activeSession(state)) {
+    if (!await chrome.alarms.get(TIMER)) await chrome.alarms.create(TIMER, { periodInMinutes: 1 });
+  } else await chrome.alarms.clear(TIMER);
+}
+
+// Remove only well-known tracking parameters. Keep fragments and application
+// parameters: they can identify different articles, searches, or SPA routes.
+function sourceKey(url) {
+  const parsed = new URL(url);
+  for (const key of [...parsed.searchParams.keys()]) {
+    if (/^utm_/i.test(key) || ['gclid', 'fbclid', 'msclkid', 'dclid'].includes(key.toLowerCase())) {
+      parsed.searchParams.delete(key);
+    }
+  }
+  return parsed.href;
+}
+function sourcesFor(session) {
+  const groups = new Map();
+  for (const item of session.events) {
+    if (!['page_visit', 'tab_switch', 'highlight'].includes(item.type) || !webURL(item.url)) continue;
+    const key = sourceKey(item.url);
+    if (!groups.has(key)) groups.set(key, { id: key, url: item.url, title: item.title || item.url, visits: 0, highlights: 0 });
+    const source = groups.get(key);
+    if (item.type === 'highlight') source.highlights++;
+    else source.visits++;
+  }
+  return [...groups.values()];
 }
 
 function report(error) {
   console.warn('MindTrail:', error.message || String(error));
-  // Badge/title feedback needs no notifications permission and survives popup closure.
+  // Badge/title feedback remains visible when the popup is closed.
   void feedback(error.message || 'Unable to save activity.', true).catch(() => {});
 }
 
@@ -87,30 +172,31 @@ async function handleMessage(message) {
       if (!name || name.length > 120) throw new Error('Enter a session name between 1 and 120 characters.');
       if (!Number.isInteger(message.windowId) || message.windowId < 0) throw new Error('A valid Chrome window is required.');
       if (state.activeSessionId !== null) throw new Error('A research session is already active. Stop it before starting another.');
+      const durationMinutes = duration(message.durationMinutes);
       const window = await chrome.windows.get(message.windowId);
       if (window.type !== 'normal') throw new Error('Start research in a normal browser window.');
       const tabs = await chrome.tabs.query({ active: true, windowId: message.windowId });
       const session = {
         id: crypto.randomUUID(), name, windowId: message.windowId,
-        startedAt: new Date().toISOString(), endedAt: null,
+        startedAt: new Date().toISOString(), endedAt: null, durationMinutes,
+        stopAt: new Date(Date.now() + durationMinutes * MINUTE).toISOString(),
         events: [event('session_started')]
       };
       if (tabs[0] && webURL(tabs[0].url)) session.events.push(event('page_visit', tabs[0]));
       state.sessions.push(session);
       state.activeSessionId = session.id;
       await saveState(state);
-      void feedback('Recording research').catch(() => {});
+      await ensureTimer(state);
+      await feedback('Recording research').catch(() => {});
       return { success: true, sessionId: session.id };
     }
     case 'STOP_SESSION': {
       const session = activeSession(state);
       if (!session) throw new Error('There is no active research session.');
-      const ended = event('session_ended');
-      session.events.push(ended);
-      session.endedAt = ended.timestamp;
-      state.activeSessionId = null;
+      finishSession(state, session, 'manual');
       await saveState(state);
-      void feedback('Research saved').catch(() => {});
+      await ensureTimer(state);
+      await feedback('Research saved').catch(() => {});
       return { success: true };
     }
     case 'UPDATE_EXPLANATION': {
@@ -125,20 +211,45 @@ async function handleMessage(message) {
       await saveState(state);
       return { success: true };
     }
+    case 'EXTEND_SESSION': {
+      const session = activeSession(state);
+      if (!session || session.id !== message.sessionId) throw new Error('This recording has ended. Start a new session.');
+      session.stopAt = new Date(Date.parse(session.stopAt) + 60 * MINUTE).toISOString();
+      session.limitWarningAt = null;
+      await saveState(state);
+      await ensureTimer(state);
+      await feedback('Recording extended by 1 hour').catch(() => {});
+      return { success: true, stopAt: session.stopAt };
+    }
+    case 'GET_RESTORE_SOURCES': {
+      const session = findSession(state, message.sessionId);
+      return { success: true, name: session.name, sources: sourcesFor(session) };
+    }
     case 'RESTORE_SESSION': {
       const session = findSession(state, message.sessionId);
-      const urls = [...new Set(session.events
-        .filter(item => ['page_visit', 'tab_switch', 'highlight'].includes(item.type) && webURL(item.url))
-        .map(item => item.url))];
-      if (!urls.length) throw new Error('This session has no web sources to restore.');
-      await chrome.windows.create({ url: urls, type: 'normal' });
-      return { success: true, sourcesOpened: urls.length };
+      if (!sourcesFor(session).length) throw new Error('This session has no web sources to restore.');
+      await chrome.tabs.create({ url: chrome.runtime.getURL(`restore.html?sessionId=${encodeURIComponent(session.id)}`) });
+      return { success: true, sourcesOpened: 0, message: 'Choose your sources in the restore checklist. Each click opens at most 10 tabs.' };
+    }
+    case 'RESTORE_BATCH': {
+      const session = findSession(state, message.sessionId);
+      if (!Array.isArray(message.sourceIds) || !message.sourceIds.length || message.sourceIds.length > 10) {
+        throw new Error('Select between 1 and 10 sources per batch.');
+      }
+      const ids = new Set(message.sourceIds);
+      const sources = sourcesFor(session).filter(source => ids.has(source.id));
+      if (sources.length !== ids.size) throw new Error('A selected source is no longer available. Refresh the checklist.');
+      // Open the original first-seen URLs: signed/query-sensitive URLs are not rewritten.
+      await chrome.windows.create({ url: sources.map(source => source.url), type: 'normal' });
+      return { success: true, sourcesOpened: sources.length };
     }
     case 'DELETE_SESSION': {
       findSession(state, message.sessionId);
       state.sessions = state.sessions.filter(item => item.id !== message.sessionId);
       if (state.activeSessionId === message.sessionId) state.activeSessionId = null;
       await saveState(state);
+      await ensureTimer(state);
+      await feedback('Session deleted').catch(() => {});
       return { success: true };
     }
     default:
@@ -219,6 +330,27 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (!webURL(url)) throw new Error('Highlights can only be saved from HTTP or HTTPS pages.');
     session.events.push(event('highlight', { ...tab, url }, { selectedText, status: 'pending' }));
     await saveState(state);
-    void feedback('Highlight saved').catch(() => {});
+    await feedback('Highlight saved').catch(() => {});
   }).catch(report);
 });
+
+// Reconcile persisted deadlines on every worker restart and browser startup.
+// Timers are wake-up hints; every recording/message path also checks stopAt.
+function initializeRecording() {
+  return serialize(async () => {
+    const state = await readState();
+    await ensureTimer(state);
+    await feedback(activeSession(state) ? 'Recording research' : state.sessions.at(-1)?.endReason === 'time_limit'
+      ? 'Time limit reached. Recording stopped; all research is saved.' : 'Ready for research');
+  });
+}
+chrome.alarms.onAlarm.addListener(alarm => {
+  if (alarm.name === TIMER) void initializeRecording().catch(report);
+});
+chrome.runtime.onStartup.addListener(() => { void initializeRecording().catch(report); });
+chrome.notifications.onClicked.addListener(id => {
+  if (id.startsWith('mindtrail-')) {
+    void chrome.tabs.create({ url: chrome.runtime.getURL('popup.html') }).catch(report);
+  }
+});
+void initializeRecording().catch(report);
