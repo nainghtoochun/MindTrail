@@ -15,20 +15,26 @@ const previewKey = 'mindtrail-dashboard-preview-v1';
 
 function mockState() {
   const event = (id, type, minute, title, url, selectedText = null, explanation = null) => ({ id, type, timestamp: `2026-11-07T17:${minute}:00Z`, tabId: 10, title, url, selectedText, explanation, status: type === 'highlight' ? (explanation ? 'complete' : 'pending') : null });
-  return { activeSessionId: 'session-ml', sessions: [
-    { id: 'session-ml', name: 'Learning Machine Learning', windowId: 1, startedAt: '2026-11-07T17:00:00Z', endedAt: null, events: [
-      event('ml-start', 'session_started', '00', 'Research session started', ''),
-      event('ml-page-1', 'page_visit', '01', 'Neural networks and deep learning', 'https://www.3blue1brown.com/topics/neural-networks'),
-      event('ml-highlight-1', 'highlight', '04', 'Neural networks and deep learning', 'https://www.3blue1brown.com/topics/neural-networks', 'Backpropagation computes the gradient of the loss function with respect to each weight by applying the chain rule.', { term: 'Backpropagation', simpleExplanation: 'Backpropagation figures out how much each connection in a neural network contributed to a prediction error. It works backward from the result, calculating gradients that an optimizer can use to adjust the weights.', example: 'Imagine a team baking a cake. If it turns out too sweet, you trace the result back through the recipe to work out which ingredients contributed most.', keyTakeaway: 'Backpropagation calculates the gradients; the optimizer uses them to improve the network.' }),
-      event('ml-page-2', 'page_visit', '09', 'An overview of gradient descent optimization algorithms', 'https://www.ruder.io/optimizing-gradient-descent/'),
-      event('ml-highlight-2', 'highlight', '12', 'An overview of gradient descent optimization algorithms', 'https://www.ruder.io/optimizing-gradient-descent/', 'The learning rate determines the size of the steps we take to reach a minimum.'),
-      event('ml-switch', 'tab_switch', '16', 'Neural networks and deep learning', 'https://www.3blue1brown.com/topics/neural-networks')
-    ] },
-    { id: 'session-design', name: 'Designing for curious minds', windowId: 1, startedAt: '2026-11-06T19:00:00Z', endedAt: '2026-11-06T19:32:00Z', events: [
-      { ...event('design-page', 'page_visit', '01', 'Recognition vs. recall in user interfaces', 'https://www.nngroup.com/articles/recognition-and-recall/'), timestamp: '2026-11-06T19:01:00Z' }
-    ] },
-    { id: 'session-climate', name: 'A better understanding of climate', windowId: 1, startedAt: '2026-11-05T20:00:00Z', endedAt: '2026-11-05T20:18:00Z', events: [] }
-  ] };
+  return {
+    activeSessionId: 'session-ml', sessions: [
+      {
+        id: 'session-ml', name: 'Learning Machine Learning', windowId: 1, startedAt: '2026-11-07T17:00:00Z', endedAt: null, events: [
+          event('ml-start', 'session_started', '00', 'Research session started', ''),
+          event('ml-page-1', 'page_visit', '01', 'Neural networks and deep learning', 'https://www.3blue1brown.com/topics/neural-networks'),
+          event('ml-highlight-1', 'highlight', '04', 'Neural networks and deep learning', 'https://www.3blue1brown.com/topics/neural-networks', 'Backpropagation computes the gradient of the loss function with respect to each weight by applying the chain rule.', { term: 'Backpropagation', simpleExplanation: 'Backpropagation figures out how much each connection in a neural network contributed to a prediction error. It works backward from the result, calculating gradients that an optimizer can use to adjust the weights.', example: 'Imagine a team baking a cake. If it turns out too sweet, you trace the result back through the recipe to work out which ingredients contributed most.', keyTakeaway: 'Backpropagation calculates the gradients; the optimizer uses them to improve the network.' }),
+          event('ml-page-2', 'page_visit', '09', 'An overview of gradient descent optimization algorithms', 'https://www.ruder.io/optimizing-gradient-descent/'),
+          event('ml-highlight-2', 'highlight', '12', 'An overview of gradient descent optimization algorithms', 'https://www.ruder.io/optimizing-gradient-descent/', 'The learning rate determines the size of the steps we take to reach a minimum.'),
+          event('ml-switch', 'tab_switch', '16', 'Neural networks and deep learning', 'https://www.3blue1brown.com/topics/neural-networks')
+        ]
+      },
+      {
+        id: 'session-design', name: 'Designing for curious minds', windowId: 1, startedAt: '2026-11-06T19:00:00Z', endedAt: '2026-11-06T19:32:00Z', events: [
+          { ...event('design-page', 'page_visit', '01', 'Recognition vs. recall in user interfaces', 'https://www.nngroup.com/articles/recognition-and-recall/'), timestamp: '2026-11-06T19:01:00Z' }
+        ]
+      },
+      { id: 'session-climate', name: 'A better understanding of climate', windowId: 1, startedAt: '2026-11-05T20:00:00Z', endedAt: '2026-11-05T20:18:00Z', events: [] }
+    ]
+  };
 }
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -100,7 +106,7 @@ function renderSidebar() {
   $('session-count').textContent = state.sessions.length;
   const list = $('sessions'); list.replaceChildren();
   const matches = state.sessions.filter(s => `${s.name} ${s.events.map(e => `${e.selectedText || ''} ${e.explanation ? Object.values(e.explanation).join(' ') : ''}`).join(' ')}`.toLowerCase().includes(query));
-  for (const session of [...matches].sort((a,b) => new Date(b.startedAt) - new Date(a.startedAt))) {
+  for (const session of [...matches].sort((a, b) => new Date(b.startedAt) - new Date(a.startedAt))) {
     const item = button('', 'session' + (session.id === selectedId ? ' selected' : ''), () => { selectedId = session.id; render(); });
     item.setAttribute('aria-current', session.id === selectedId ? 'true' : 'false');
     const title = el('span', 'session-name');
@@ -135,7 +141,7 @@ function render() {
   content.append(stats);
   const heading = el('div', 'replay-heading'); const introduction = el('div'); introduction.append(el('h2', '', 'Research replay'), el('p', '', 'Every stop, every spark. Pick up right where you left off.')); heading.append(introduction, el('span', 'chronological', '↓ Chronological')); content.append(heading);
   const timeline = el('div', 'timeline'); let day = '';
-  for (const event of [...session.events].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp))) {
+  for (const event of [...session.events].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))) {
     const currentDay = date(event.timestamp, { month: 'long', day: 'numeric', year: 'numeric' });
     if (currentDay !== day) { timeline.append(el('div', 'date-label', currentDay.toUpperCase())); day = currentDay; }
     timeline.append(renderEvent(session, event));

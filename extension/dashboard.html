@@ -1,23 +1,68 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MindTrail — Your research, remembered</title><link rel="stylesheet" href="dashboard.css"><script type="module" src="dashboard.js"></script></head>
-<body>
-<aside class="sidebar">
-  <a class="brand" href="dashboard.html"><span class="brand-mark">m<span>✦</span></span>MindTrail<span class="beta">BETA</span></a>
-  <div class="workspace-label">YOUR WORKSPACE</div>
-  <div class="nav-current"><span>◷</span> Research sessions <span id="session-count" class="count">0</span></div>
-  <label class="search"><span>⌕</span><input id="search" type="search" placeholder="Search your research…" aria-label="Search sessions, highlights and explanations"></label>
-  <div class="list-label">SAVED SESSIONS</div>
-  <nav id="sessions" aria-label="Research sessions"></nav>
-  <div class="sidebar-footer"><span class="footer-symbol">✧</span><strong>A little curiosity goes a long way.</strong><p>Your ideas deserve a place to grow.</p><button id="help" class="text-button">How MindTrail works ↗</button></div>
-  <div class="local-note"><span class="dot"></span> Stored on your device</div>
-</aside>
-<main>
-  <header class="topbar"><span>Workspace <span class="slash">/</span> Research replay</span><span class="top-tag">✦ Your research, remembered.</span></header>
-  <div id="mode-banner" class="mode-banner" hidden></div>
-  <section id="content" aria-busy="true"><div class="empty">Loading your research…</div></section>
-  <footer class="main-footer">Made for curious minds. <span>MindTrail · Fall Hacks 2026</span></footer>
-</main>
-<div id="toast" role="status" aria-live="polite" hidden></div>
-<dialog id="confirm-dialog"><form method="dialog"><h2 id="dialog-title">Confirm action</h2><p id="dialog-message"></p><div class="dialog-actions"><button value="cancel" class="button secondary">Cancel</button><button value="confirm" id="dialog-confirm" class="button">Continue</button></div></form></dialog>
-</body></html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>MindTrail — Your research, remembered</title>
+    <link rel="stylesheet" href="dashboard.css" />
+    <script type="module" src="dashboard.js"></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="dashboard.html"
+        ><span class="brand-mark">m<span>✦</span></span
+        >MindTrail<span class="beta">BETA</span></a
+      >
+      <div class="workspace-label">YOUR WORKSPACE</div>
+      <div class="nav-current">
+        <span>◷</span> Research sessions
+        <span id="session-count" class="count">0</span>
+      </div>
+      <label class="search"
+        ><span>⌕</span
+        ><input
+          id="search"
+          type="search"
+          placeholder="Search your research…"
+          aria-label="Search sessions, highlights and explanations"
+      /></label>
+      <div class="list-label">SAVED SESSIONS</div>
+      <nav id="sessions" aria-label="Research sessions"></nav>
+      <div class="sidebar-footer">
+        <span class="footer-symbol">✧</span
+        ><strong>A little curiosity goes a long way.</strong>
+        <p>Your ideas deserve a place to grow.</p>
+        <button id="help" class="text-button">How MindTrail works ↗</button>
+      </div>
+      <div class="local-note">
+        <span class="dot"></span> Stored on your device
+      </div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <span>Workspace <span class="slash">/</span> Research replay</span
+        ><span class="top-tag">✦ Your research, remembered.</span>
+      </header>
+      <div id="mode-banner" class="mode-banner" hidden></div>
+      <section id="content" aria-busy="true">
+        <div class="empty">Loading your research…</div>
+      </section>
+      <footer class="main-footer">
+        Made for curious minds. <span>MindTrail · Fall Hacks 2026</span>
+      </footer>
+    </main>
+    <div id="toast" role="status" aria-live="polite" hidden></div>
+    <dialog id="confirm-dialog">
+      <form method="dialog">
+        <h2 id="dialog-title">Confirm action</h2>
+        <p id="dialog-message"></p>
+        <div class="dialog-actions">
+          <button value="cancel" class="button secondary">Cancel</button
+          ><button value="confirm" id="dialog-confirm" class="button">
+            Continue
+          </button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

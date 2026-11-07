@@ -6,9 +6,11 @@ import { explainWithGemini } from './gemini.js';
 
 export function createApp(explain = explainWithGemini) {
   const app = express();
-  app.use(cors({ origin(origin, callback) {
-    callback(null, !origin || /^chrome-extension:\/\/[a-p]{32}$/.test(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
-  } }));
+  app.use(cors({
+    origin(origin, callback) {
+      callback(null, !origin || /^chrome-extension:\/\/[a-p]{32}$/.test(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
+    }
+  }));
   app.use(express.json({ limit: '20kb' }));
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'mindtrail-api' }));
   app.post('/api/explain', async (req, res, next) => {
