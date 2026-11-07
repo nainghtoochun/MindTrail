@@ -128,9 +128,9 @@ function render() {
   const content = $('content'); content.replaceChildren();
   const session = state.sessions.find(s => s.id === selectedId);
   if (!session) {
-    const empty = el('div', 'empty'); empty.append(el('h2', '', 'Make room for your next discovery'), el('p', '', 'Open MindTrail in your toolbar and start a named research session. Your pages and saved highlights will appear here.')); content.append(empty); return;
+    const empty = el('div', 'empty'); empty.append(el('h2', '', 'Your next chapter starts here'), el('p', '', 'Open MindTrail in your toolbar and start a named research session. Your pages and saved highlights will appear here.')); content.append(empty); return;
   }
-  content.append(el('div', 'eyebrow', 'YOUR RESEARCH, REMEMBERED'));
+  content.append(el('div', 'eyebrow', 'FIELD NOTES / YOUR RESEARCH NOTEBOOK'));
   const titleRow = el('div', 'title-row'); titleRow.append(el('h1', '', session.name));
   const actions = el('div', 'actions');
   const restore = button('Restore tabs', 'button', () => restoreSession(session));
@@ -147,7 +147,7 @@ function render() {
     const stat = el('div', 'stat'); const detail = el('div'); detail.append(el('strong', '', value), el('small', '', label)); const symbol = el('span', 'stat-icon'); symbol.append(icon(iconName)); stat.append(symbol, detail); stats.append(stat);
   }
   content.append(stats);
-  const heading = el('div', 'replay-heading'); const introduction = el('div'); introduction.append(el('h2', '', 'Research replay'), el('p', '', 'Follow the connections, from first click to last discovery.')); heading.append(introduction, el('span', 'chronological', 'Oldest first')); content.append(heading);
+  const heading = el('div', 'replay-heading'); const introduction = el('div'); introduction.append(el('h2', '', 'Your study notes'), el('p', '', 'Every page you visited. Every lightbulb moment.')); heading.append(introduction, el('span', 'chronological', 'Oldest first')); content.append(heading);
   const filters = el('div', 'timeline-filters'); filters.setAttribute('role', 'group'); filters.setAttribute('aria-label', 'Filter timeline');
   for (const [value, label] of [['all', 'All activity'], ['highlight', 'Highlights'], ['pages', 'Pages']]) {
     const filter = button(label, 'filter' + (eventFilter === value ? ' active' : ''), () => { eventFilter = value; render(); document.querySelector(`[data-filter="${value}"]`)?.focus({ preventScroll: true }); });
@@ -161,7 +161,7 @@ function render() {
     if (currentDay !== day) { timeline.append(el('div', 'date-label', currentDay.toUpperCase())); day = currentDay; }
     timeline.append(renderEvent(session, event));
   }
-  if (!visibleEvents.length) timeline.append(el('div', 'empty', session.events.length ? 'Nothing here yet. Try another filter or keep exploring.' : 'Your trail is ready. Visit a page or save a highlight to begin.'));
+  if (!visibleEvents.length) timeline.append(el('div', 'empty', session.events.length ? 'Nothing here yet. Try another filter or keep exploring.' : 'A fresh page. Visit a website or save a highlight to start your notes.'));
   content.append(timeline);
 }
 function renderEvent(session, event) {
@@ -188,7 +188,7 @@ function renderEvent(session, event) {
       const explain = button(pending.has(key) ? 'Explaining…' : drafts.has(key) ? 'Retry saving explanation' : 'Explain with Gemini', 'button secondary', () => generateExplanation(session.id, event.id));
       explain.prepend(icon('spark')); explain.classList.add('explain-button'); if (pending.has(key)) explain.classList.add('loading');
       explain.disabled = pending.has(key) || !event.selectedText;
-      actions.append(explain, el('span', 'helper', pending.has(key) ? 'Finding a simpler way to explain it…' : 'Understand it. Keep it.')); card.append(actions);
+      actions.append(explain, el('span', 'helper', pending.has(key) ? 'Finding a simpler way to explain it…' : 'A little help from your study buddy.')); card.append(actions);
       const error = errors.get(key) || (event.status === 'error' ? 'The previous explanation failed. You can retry.' : '');
       if (error) { const feedback = el('div', 'error', error); feedback.setAttribute('role', 'alert'); card.append(feedback); }
     }
@@ -197,12 +197,12 @@ function renderEvent(session, event) {
 }
 function explanationCard(explanation, unsaved) {
   const box = el('section', 'explanation'); const heading = el('div', 'ai-heading');
-  const badge = el('span', 'ai-badge'); badge.append(icon('spark'), document.createTextNode('Explained with Gemini')); heading.append(badge, el('span', 'save-status', unsaved ? 'Not saved yet' : 'Saved')); if (unsaved) box.classList.add('unsaved');
+  const badge = el('span', 'ai-badge'); badge.append(icon('spark'), document.createTextNode('Gemini study buddy')); heading.append(badge, el('span', 'save-status', unsaved ? 'Not saved yet' : 'Saved')); if (unsaved) box.classList.add('unsaved');
   const copy = button('Copy', 'copy', async () => {
     try { await navigator.clipboard.writeText(`${explanation.term}\n\n${explanation.simpleExplanation}\n\nExample: ${explanation.example}\n\nKey takeaway: ${explanation.keyTakeaway}`); toast('Explanation copied.'); } catch { toast('Clipboard access failed. Please allow clipboard access and retry.'); }
   }); copy.prepend(icon('copy')); heading.append(copy);
   box.append(heading, el('h3', '', explanation.term), el('p', '', explanation.simpleExplanation));
-  for (const [label, text, className] of [['AN EVERYDAY EXAMPLE', explanation.example, 'example'], ['KEY TAKEAWAY', explanation.keyTakeaway, 'takeaway']]) { const p = el('p', className); p.append(el('span', 'mini-label', label), document.createTextNode(text)); box.append(p); }
+  for (const [label, text, className] of [['LET’S MAKE IT CLICK', explanation.example, 'example'], ['THE BIT TO REMEMBER', explanation.keyTakeaway, 'takeaway']]) { const p = el('p', className); p.append(el('span', 'mini-label', label), document.createTextNode(text)); box.append(p); }
   return box;
 }
 async function generateExplanation(sessionId, eventId) {
