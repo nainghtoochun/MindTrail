@@ -27,8 +27,46 @@ export function createApp(explain = explainWithGemini) {
   app.use((error, _req, res, _next) => {
     if (error.type === 'entity.parse.failed') return res.status(400).json({ error: 'Request body must be valid JSON.' });
     if (error.type === 'entity.too.large') return res.status(413).json({ error: 'Request body is too large.' });
-    const missingKey = error.status === 503;
-    res.status(missingKey ? 503 : 502).json({ error: missingKey ? error.message : 'Gemini could not generate an explanation. Check your API key, quota and connection, then retry.' });
+    // Classify provider errors without exposing raw responses, selected text or credentials.
+    const status = Number(error.status || error.statusCode);
+    const detail = String(error.message || '');
+    let code = 'GEMINI_REQUEST_FAILED';
+    let message = 'The Gemini request failed. Check the backend connection and retry.';
+    let httpStatus = 502;
+    if (detail === 'Configure GEMINI_API_KEY in server/.env before requesting explanations.') {
+      code = 'GEMINI_KEY_MISSING';
+      message = 'Set GEMINI_API_KEY in server/.env, save the file, then restart the backend.';
+      httpStatus = 503;
+    } else if (/API_KEY_INVALID|API key not valid|API key expired/i.test(detail) || status === 401) {
+      code = 'GEMINI_KEY_INVALID';
+      message = 'Google rejected the API key. Replace GEMINI_API_KEY with a valid Google AI Studio key, save .env, then restart the backend.';
+    } else if (status === 429 || /RESOURCE_EXHAUSTED/i.test(detail)) {
+      code = 'GEMINI_QUOTA_EXCEEDED';
+      message = 'Google reports a rate or quota limit. Check this API key project’s limits in Google AI Studio. If the limit is zero, waiting will not help; the project needs access or quota for the configured model. Otherwise wait and retry.';
+      httpStatus = 429;
+    } else if (status === 403) {
+      code = 'GEMINI_ACCESS_DENIED';
+      message = 'Google denied access. Check the API key restrictions, project API access and regional availability in Google AI Studio.';
+    } else if (status === 404) {
+      code = 'GEMINI_MODEL_UNAVAILABLE';
+      message = 'The configured Gemini model was not found for this request. Check GEMINI_MODEL in server/.env against the models available to your project, then restart the backend.';
+    } else if (status === 400) {
+      code = 'GEMINI_REQUEST_REJECTED';
+      message = 'Google rejected the request settings. Check that GEMINI_MODEL supports structured JSON output and that the API key is valid.';
+    } else if (status >= 500) {
+      code = 'GEMINI_TEMPORARILY_UNAVAILABLE';
+      message = 'Google Gemini is temporarily unavailable. Wait a moment and retry.';
+      httpStatus = 503;
+    } else if (/timeout|timed out|abort/i.test(detail) || error.name === 'AbortError') {
+      code = 'GEMINI_TIMEOUT';
+      message = 'Google Gemini did not respond in time. Check your internet connection and retry.';
+      httpStatus = 504;
+    } else if (error instanceof SyntaxError || /invalid explanation/i.test(detail)) {
+      code = 'GEMINI_INVALID_RESPONSE';
+      message = 'Gemini returned an incomplete or invalid explanation. Please retry.';
+    }
+    console.warn(`[MindTrail] ${code}${Number.isFinite(status) ? ` (provider HTTP ${status})` : ''}`);
+    res.status(httpStatus).json({ error: message, code });
   });
   return app;
 }
