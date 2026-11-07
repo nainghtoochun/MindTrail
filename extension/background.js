@@ -117,10 +117,13 @@ async function handleMessage(message) {
       const session = findSession(state, message.sessionId);
       const highlight = session.events.find(item => item.id === message.eventId && item.type === 'highlight');
       if (!highlight) throw new Error('Highlight not found in this session.');
-      if (typeof message.explanation !== 'string' || !message.explanation.trim()) {
-        throw new Error('Explanation must be nonempty text.');
+      const fields = ['term', 'simpleExplanation', 'example', 'keyTakeaway'];
+      const explanation = message.explanation;
+      if (!explanation || typeof explanation !== 'object' || Array.isArray(explanation) ||
+          !fields.every(field => typeof explanation[field] === 'string' && explanation[field].trim())) {
+        throw new Error('Explanation must contain term, simpleExplanation, example and keyTakeaway as nonempty text.');
       }
-      highlight.explanation = message.explanation;
+      highlight.explanation = Object.fromEntries(fields.map(field => [field, explanation[field]]));
       highlight.status = 'ready';
       await saveState(state);
       return { success: true };
