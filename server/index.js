@@ -3,14 +3,17 @@ import express from 'express';
 import cors from 'cors';
 import { pathToFileURL } from 'node:url';
 import { explainWithGemini } from './gemini.js';
+import { briefWithGemini } from './brief.js';
+import { validateBriefInput, validateBriefResult } from '../extension/brief-contract.mjs';
 
-export function createApp(explain = explainWithGemini) {
+export function createApp(explain = explainWithGemini, generateBrief = briefWithGemini) {
   const app = express();
   app.use(cors({
     origin(origin, callback) {
       callback(null, !origin || /^chrome-extension:\/\/[a-p]{32}$/.test(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin));
     }
   }));
+  app.use('/api/research-brief', express.json({ limit: '512kb' }));
   app.use(express.json({ limit: '20kb' }));
   app.get('/api/health', (_req, res) => res.json({ status: 'ok', service: 'mindtrail-api' }));
   app.post('/api/explain', async (req, res, next) => {
@@ -23,6 +26,18 @@ export function createApp(explain = explainWithGemini) {
     }
     try { res.json(await explain({ selectedText, pageTitle, pageUrl, level })); }
     catch (error) { next(error); }
+  });
+  app.post('/api/research-brief', async (req, res, next) => {
+    let input;
+    try { input = validateBriefInput(req.body); }
+    catch (error) { return res.status(400).json({ error: error.message }); }
+    try {
+      const generated = await generateBrief(input);
+      let result;
+      try { result = validateBriefResult(generated, input); }
+      catch { return res.status(502).json({ error: 'The brief contained incomplete or unsupported evidence references. Please retry.', code: 'BRIEF_INVALID_RESPONSE' }); }
+      res.json(result);
+    } catch (error) { next(error); }
   });
   app.use((error, _req, res, _next) => {
     if (error.type === 'entity.parse.failed') return res.status(400).json({ error: 'Request body must be valid JSON.' });
